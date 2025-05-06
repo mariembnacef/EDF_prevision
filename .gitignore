@@ -64,3 +64,10 @@ cython_debug/
 
 # PyInstaller
 *.spec
+modele_random_forest.pkl
+
+modele_knn.pkl
+modele_xgboost.pkl
+modele_xgboost_feries.pkl
+
+models/
