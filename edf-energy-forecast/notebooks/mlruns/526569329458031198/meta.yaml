@@ -1,0 +1,6 @@
+artifact_location: file:///C:/Users/boudj/edf-energy-forecast/notebooks/mlruns/526569329458031198
+creation_time: 1747001910627
+experiment_id: '526569329458031198'
+last_update_time: 1747001910627
+lifecycle_stage: active
+name: LSTM_avec_meteo

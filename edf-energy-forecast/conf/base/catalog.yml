@@ -1,0 +1,13 @@
+df_filtre:
+  type: kedro_datasets.pandas.CSVDataSet
+  filepath: data/01_raw/df_filtre.csv
+  load_args:
+    encoding: latin1
+    sep: "\t" 
+
+df_corrige:
+  type: kedro_datasets.pandas.CSVDataSet
+  filepath: data/02_intermediate/df_corrige.csv
+  save_args:
+    index: False
+

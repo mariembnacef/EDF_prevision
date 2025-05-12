@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/boudj/edf-energy-forecast/notebooks/mlruns/526569329458031198/c57231afe27f4ad4ad064aabb8168791/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '526569329458031198'
+lifecycle_stage: active
+run_id: c57231afe27f4ad4ad064aabb8168791
+run_name: intelligent-yak-500
+run_uuid: c57231afe27f4ad4ad064aabb8168791
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747003059659
+status: 1
+tags: []
+user_id: boudj
