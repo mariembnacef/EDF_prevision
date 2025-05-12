@@ -1,0 +1,16 @@
+artifact_uri: file:///C:/Users/boudj/edf-energy-forecast/notebooks/mlruns/0/9e3edcf474e643f6a9376997c7c1df05/artifacts
+deleted_time: 1747002792658
+end_time: 1746992575928
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: deleted
+run_id: 9e3edcf474e643f6a9376997c7c1df05
+run_name: gifted-dolphin-327
+run_uuid: 9e3edcf474e643f6a9376997c7c1df05
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1746989047734
+status: 3
+tags: []
+user_id: boudj

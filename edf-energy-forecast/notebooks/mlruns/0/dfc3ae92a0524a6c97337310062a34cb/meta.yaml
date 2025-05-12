@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/boudj/edf-energy-forecast/notebooks/mlruns/0/dfc3ae92a0524a6c97337310062a34cb/artifacts
+end_time: 1746992586205
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: dfc3ae92a0524a6c97337310062a34cb
+run_name: Prophet + Regressors
+run_uuid: dfc3ae92a0524a6c97337310062a34cb
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1746992586107
+status: 3
+tags: []
+user_id: boudj

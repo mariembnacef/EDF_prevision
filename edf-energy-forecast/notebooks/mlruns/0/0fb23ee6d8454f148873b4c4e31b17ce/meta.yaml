@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/boudj/edf-energy-forecast/notebooks/mlruns/0/0fb23ee6d8454f148873b4c4e31b17ce/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 0fb23ee6d8454f148873b4c4e31b17ce
+run_name: melodic-carp-359
+run_uuid: 0fb23ee6d8454f148873b4c4e31b17ce
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747003137527
+status: 1
+tags: []
+user_id: boudj
