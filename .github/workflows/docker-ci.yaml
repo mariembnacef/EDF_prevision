@@ -1,4 +1,4 @@
-# .github/workflows/docker-ci.yml
+# .github/wokflows/docker-ci.yml
 name: CI - EDF Prevision
 
 on:
