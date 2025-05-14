@@ -1,0 +1,419 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="Open Data Réseaux Énergies (ODRÉ) publie des données autour des thématiques &quot;Énergie&quot;, &quot;Infrastructure&quot;, &quot;Marché&quot;, &quot;Territoire&quot;, &quot;Mobilité&quot; et &quot;Météorologie&quot;.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="canonical" href="https://opendata.reseaux-energies.fr">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:100,300,400,600,bold" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Asap:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/style.css?v=1.2">
+  <link rel="stylesheet" href="/css/bot.css?v=1.1">
+
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <link rel="apple-touch-icon" href="/img/favicon.png">
+  <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.png">
+
+  <!-- Begin ODS Widgets -->
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://static.opendatasoft.com/ods-widgets/latest-v2/ods-widgets.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin="" />
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK" crossorigin="anonymous"></script>  
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js" integrity="sha512-KZmyTq3PLx9EZl0RHShHQuXtrvdJ+m35tuOiwlcZfs/rE7NZv29ygNA8SFCkMXTnYZQK2OX0Gm2qKGfvWEtRXA==" crossorigin="anonymous"></script>
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="https://cdnjs.cloudflare.com/ajax/libs/angular-sanitize/1.8.3/angular-sanitize.min.js" integrity="sha512-dqbRITjlgYAKHWHwL8fK7VPOsFc702ybywomtYLRcjOzBHM3WgEGN0SQQR6IJKY4ZiJiZkNguOAcFZmalk+2sA==" crossorigin="anonymous"></script>
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="https://cdnjs.cloudflare.com/ajax/libs/angular-i18n/1.2.2/angular-locale_fr-fr.min.js" integrity="sha512-zTjUPZB2DNM2n7TUKJ1Zt5eqZGg5OYdbnB1+1ykTG8o+2CtNNDNhRPKeMebQLvV4vgE49RvcZCX2o+5gD3XQiA==" crossorigin="anonymous"></script>
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="https://cdn.jsdelivr.net/npm/vega@5.20.2" integrity="sha384-oQhebJIeI87crKEbKfAlw34gMOsvVzCMaDQ37e5BJYhc5Z5D+5trWmc5wuGfN89o" crossorigin="anonymous"></script>  
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.0" integrity="sha384-EPcfdisJ0A5aMjb/HMRlIxeeVeGGLPZgmIvqRkr+TtNQ3GyjsUrK+tzUjYHtyNxa" crossorigin="anonymous"></script>
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="https://cdn.jsdelivr.net/npm/vega-embed@6.17.0" integrity="sha384-yu20vnQGaas7JQJS9zUtAxaXLNh7Tbq39TLd+Hca+SYsUSkpJ6bF5M/gXN8UHz10" crossorigin="anonymous"></script>  <!-- End ODS Widgets -->
+
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="https://unpkg.com/aos@2.3.1/dist/aos.js" integrity="sha384-wziAfh6b/qT+3LrqebF9WeK4+J5sehS6FA10J1t3a866kJ/fvU5UwofWnQyzLtwu" crossorigin="anonymous"></script>
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="https://static.opendatasoft.com/ods-widgets/latest-v2/ods-widgets.min.js" integrity="sha512-PI8QfZCTuSwzBSvfxpfCimXx8pwU8yUTLjlcWY+X3iZwZ0OdRhtIL13tZkUwTqnDUOoh1UEyPWGLfSp+Ub8HhA==" crossorigin="anonymous"></script>
+  <!-- Make sure you put this AFTER Leaflet's CSS -->
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
+  <!-- <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.0/axios.min.js"></script> -->
+
+  <title>Open Data Réseaux Énergies (ODRÉ) </title>
+
+</head>
+
+
+<body>
+
+  <header>
+    <div id="header-desktop" class="flex maxwidth">
+      <div class="flex logos">
+        <a href="/"><img class="logo-odre" width="147" src="/img/logo-odre.svg" alt=""></a>
+        <div class="logos-membres" style="display: grid;grid-template-columns: repeat(4, 1fr)">
+          <a href="https://www.rte-france.com" target="_blank"><img width="81"  style="height:30px" alt="rte" src="/img/logo-header/logo-rte.png"></a>
+          <a href="https://www.natrangroupe.com" target="_blank"><img  width="86" style="height:32px;" alt="natran" src="/img/logo-header/logo-natran.svg"></a>
+          <a href="https://www.storengy.com/fr" target="_blank"><img  width="95" alt="storengy" src="/img/logo-header/logo-storengy.png"></a>
+          <a href="https://www.fluxys.com/en/company/dunkerque-lng"   target="_blank"><img width="94" alt="dunkerque-lng"
+              src="/img/logo-header/logo-dunkerque-lng.png"></a>
+          <a href="https://www.mobiogaz.fr/" target="_blank"><img width="85" style="margin-top:-5px" alt="afgnv" src="/img/logo-header/logo-afgnv-2.png"></a>
+          <a href="https://www.elengy.com/fr/" target="_blank"><img style="margin-top:-5px;height: 30px;" alt="elengy" src="/img/logo-header/logo-elengy.png"></a>
+          <a href="https://www.terega.fr" target="_blank"><img width="94" style="margin-top:-5px" alt="terega" src="/img/logo-header/logo-terega.png"></a>
+          <a href="https://global.weathernews.com" target="_blank"><img width="95" style="margin-top:-5px" alt="weathernews"
+              src="/img/logo-header/logo-weathernews.png"></a>
+        </div>
+      </div>
+      <nav class="flex">
+        <a href="/decouvrir-odre" class="">DÉCOUVRIR
+          ODRÉ</a>
+        <a href="/explore" class="">DONNÉES</a>
+        <a href="/reutilisations"
+          class="">DATAVISUALISATIONS</a>
+        <a href="/actualites" class="">ACTUALITÉS</a>
+        <a href="/ressources" class="">AIDE ET RESSOURCES</a>
+      </nav>
+      <div style="font-size: 10px;position: absolute;top:7px;right:15px">
+                        <a class="bouton" style="padding: 5px;"
+          href="https://odre.opendatasoft.com/oauth2/authorize?client_id=86314734b3c7451eb8ba56e12600552a&response_type=code&redirect_uri=https://opendata.reseaux-energies.fr/callback.php">
+          Connexion
+        </a>
+                
+      </div>
+    </div>
+    <div id="header-mobile" class="flex maxwidth">
+      <div>
+        <div class="hamburger-menu">
+          <div id="menu__toggle"></div>
+          <div class="menu__btn">
+            <span></span>
+          </div>
+
+          <ul class="menu__box">
+            <li> <a class="menu__item" href="/decouvrir-odre"
+                class="">Découvrir
+                ODRÉ</a></li>
+            <li> <a class="menu__item" href="/explore"
+                class="">Données</a></li>
+            <li> <a class="menu__item" href="/reutilisations"
+                class="">Datavisualisations</a>
+            </li>
+            <li> <a class="menu__item" href="/actualites"
+                class="">Actualités</a></li>
+            <li> <a class="menu__item" href="/ressources"
+                class="">Ressources</a></li>
+            <li>
+                                          <a class="menu__item"
+                href="https://odre.opendatasoft.com/oauth2/authorize?client_id=86314734b3c7451eb8ba56e12600552a&response_type=code&redirect_uri=https://opendata.reseaux-energies.fr/callback.php">
+                Connexion
+              </a>
+                            
+
+            </li>
+          </ul>
+        </div>
+        <a href="/"><img alt="" class="logo-odre" src="/img/logo-odre.svg"></a>
+      </div>
+    </div>
+  </header>
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba" >
+    window.ods = {
+      'accessToken': ""
+    }
+  </script>
+
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="/js/vendor/d3.min.js"></script>
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="/js/utils.js"></script>
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  src="/js/app.js"></script>
+  <script nonce="3ae98e8956b38e5139b0f3becfd37eba"  >
+      var _paq = window._paq = window._paq || [];
+      /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+      _paq.push(["setExcludedQueryParams", ["f[0]=im_field_type_de_contenus:91"]]);
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+      (function() {
+        var u="https://rte-dpco.matomo.cloud/";
+        _paq.push(['setTrackerUrl', u+'matomo.php']);
+        _paq.push(['setSiteId', '48']);
+        var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+        //g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+        g.async=true; g.src='//cdn.matomo.cloud/rte-dpco.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g,s);
+      })();
+  </script>
+<div id="bot" style="position:fixed;bottom:-14px;right:-33px;z-index:2">
+  <div id="bot-hello">
+    <img id="bot-wait" width="197" height="170" src="/img/bot.svg" alt="">
+    <div id="bot-hover">
+      <div class="bot-speak">Besoin d'aide ?</div>
+      <img src="/img/bot-hover.svg" alt="" >
+    </div>
+  </div>
+  <div id="bot-respond">
+    <div class="bot-speak">Comment puis-je vous aider ?</div>
+    <div class="bot-result">
+      <p>Bonjour, je suis le petit robot ODRÉ, <strong>vous souhaitez...</strong></p>
+      <div>
+        <a href="/ressources/glossaire" class="bouton bouton-grey">Consulter le glossaire</a>
+        <a href="/tutoriel" class="bouton bouton-grey">Regarder le tutoriel </a>
+        <a href="/pages/contactv2" class="bouton bouton-grey">Envoyer un message aux équipes ODRÉ </a>
+
+      </div>
+    </div>
+    <img src="/img/bot-active.svg" alt="">
+  </div>
+</div>
+
+
+
+
+<script nonce="3ae98e8956b38e5139b0f3becfd37eba">
+  AOS.init();
+</script>
+
+<script nonce="3ae98e8956b38e5139b0f3becfd37eba" src="/js/bot.js"></script>
+
+</body>
+
+
+</html>
+
+<div ng-app="ods-widgets" ng-init="params={'query':undefined, 'modal_open': true}">
+
+  <!--
+   <div id="modal-background" style="z-index: 15; position: absolute; left: 0; top: 0; background-color: rgba(0,0,0,0.2); width: 100vw; height: 100vh" onclick="hideModal()">
+    &nbsp;
+  </div> 
+
+
+  <div class="maxwidth modal" id="modal">
+
+    <div class="content" style="">
+      <p>
+        Un incident technique est en cours sur l'application eCO2mix, impactant la disponibilité des données temps réel des jeux de données éCO2mix (nationales, régionales et métropoles). Nos équipes travaillent actuellement à la résolution du problème.
+      </p>
+    </div>
+    <script>
+      document.querySelector('body').classList.add('overflow-hidden');
+      function hideModal() {
+        document.querySelector('#modal').classList.add('hidden');
+        document.querySelector('#modal-background').classList.add('hidden');
+        document.querySelector('body').classList.remove('overflow-hidden');
+      }
+    </script>
+  </div> 
+  -->
+
+
+  <ods-catalog-context context="catalog" catalog-domain="https://odre.opendatasoft.com" ods-domain-statistics>
+    <div id="home" style="width: 100%;position:relative;">
+      <div class="maxwidth grid" style="grid-template-columns: 650px 500px">
+        <div style="padding:40px 0;position: relative;z-index:2">
+          <h1 style="margin-top:20px;;">Le réseau au coeur des données d'énergie</h1>
+          <p style="max-width:500px">Explorez, comprenez, et appropriez vous les données d’énergie, en direct des
+            transporteurs d’énergie et de leurs partenaires.</p>
+          <div class="flex search-container" style="margin-top:30px">
+            <a class="bouton bouton-primary" href="/explore">
+              Explorez les jeux de données
+            </a>
+
+            <div class="input-search" style="position: relative;">
+              <ods-catalog-context context="catalog" catalog-domain="https://odre.opendatasoft.com"
+                ods-domain-statistics>
+                <input class="bouton bouton-outline" id="search-module" autocomplete="off"
+                  placeholder="Ex : ENR, bilan, registre,..." name="q" autofocus=false
+                  ng-model="params['query']" ng-model-options="{ updateOn: 'keyup', debounce: 500 }"
+                  ng-change="catalog.parameters['q'] =  params['query'] ?  params['query']: undefined"
+                  style="position:relative">
+                <div ng-if="(params['query'].length > 2)" class="autocompletion"
+                  style="position: absolute;background: #fff;border-bottom-left-radius: 7px;border-bottom-right-radius: 7px;border: #eeee solid 1px;width: 100%;margin-left:-40px">
+                  <div ods-results="catalog_res" ods-results-context="catalog">
+                    <div ng-if="catalog_res.length==0">
+
+
+                      <div class="item-result">
+                        <p
+                          style="font-weight:400;display:block;opacity:0.8;font-style:italic;font-size:12px;">
+                          Aucun résultat</p>
+                      </div>
+                    </div>
+                    <div ng-if="catalog_res.length>0">
+                      <div class="item-result">
+                        <a href="/explore?q={{result.datasetid}}"
+                          style="font-weight:400;display:block;color:black;text-transform:capitalize;text-decoration:none"
+                          ng-repeat="result in catalog_res | limitTo:5">
+                          <p>{{result.metas.title}}</p>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ods-catalog-context>
+
+            </div>
+
+          </div>
+          <div class="flex theme-list" style="flex-wrap: wrap" ods-facet-results="themes"
+            ods-facet-results-context="catalog" ods-facet-results-facet-name="theme" ods-facet-results-sort="alphanum">
+            <a ng-repeat="theme in themes" href="/explore?refine.theme={{ theme.path }}" class="bouton bouton-grey">
+              {{ theme.name }}
+            </a>
+          </div>
+        </div>
+        <div style="position: relative;">
+          <img alt="" src="/img/home-illu.svg" id="main-img-home" style="width: 700px;left: -21%;top: -44px;;position:absolute;">
+        </div>
+      </div>
+
+      <div class="maxwidth content-list" style="margin-top:40px;margin-bottom:80px;position: relative;">
+        <img alt="" src="/img/background-home-1.svg" class="bg_home" style="position: absolute;width:1750px;left:-35%;top:70px;z-index:-1">
+        <h2>Comprendre les données d’énergie</h2>
+        <ods-dataset-context context="ctxcontenus1,ctxcontenus2"
+          ctxcontenus1-domain="https://odre.opendatasoft.com"
+          ctxcontenus1-apikey="01c008ee08cccdd9a1414644fa4fa5d2276d9e49bb05f5f42e544ac1"
+          ctxcontenus1-dataset="cms-site-v2-home" ctxcontenus1-parameters="{'q':'id <= 2', 'sort': '-id'}"
+          ctxcontenus2-domain="https://odre.opendatasoft.com"
+          ctxcontenus2-apikey="01c008ee08cccdd9a1414644fa4fa5d2276d9e49bb05f5f42e544ac1"
+          ctxcontenus2-dataset="cms-site-v2-home" ctxcontenus2-parameters="{'q':'id > 2', 'sort': '-id'}">
+          <div ods-results="contenus" ods-results-context="ctxcontenus1" ods-results-max="2">
+            <div class="grid" style="grid-template-columns:1fr 1fr">
+              <a href="{{ contenu.fields.url }}" target="{{ contenu.fields.url_type == 'Externe' ? '_blank' : '' }}" ng-repeat="contenu in contenus" class="card-content"
+                style="background-image:url({{ contenu.fields.image_1 }})">
+                <div class="tag">{{contenu.fields.tag}}</div>
+                <div class="background-filter">
+                  <div class="description">
+
+                    <h3>{{contenu.fields.titre}}</h3>
+                    <p>{{contenu.fields.texte_1}}</p>
+                    <div class="lien">Accéder</div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div ods-results="contenus" ods-results-context="ctxcontenus2" ods-results-max="6">
+            <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+              <a href="{{ contenu.fields.url }}" target="{{ contenu.fields.url_type == 'Externe' ? '_blank' : '' }}" ng-repeat="contenu in contenus" class="card-content"
+                style="background-image:url({{ contenu.fields.image_1 }})">
+                <div class="tag">{{contenu.fields.tag}}</div>
+                <div class="background-filter">
+                  <div class="description">
+                    <h3>{{contenu.fields.titre}}</h3>
+                    <p>{{contenu.fields.texte_1}}</p>
+                    <div class="lien">Accéder</div>
+                  </div>
+                </div>
+              </a>
+
+              <!--
+                <div class="card-content" style="background-image:url(img/background-new.png)">
+                  <div class="description">
+                    <h3>Térritoires et régions</h3>
+                    <p>Renvoie sur la page dédiée territoire ou tableau de bord</p>
+                    <div class="lien">Accéder</div>
+                  </div>
+                </div>
+                <div class="card-content" style="background-image:url(img/background-data.png)">
+                  <div class="description">
+                    <h3>Térritoires et régions</h3>
+                    <p>Renvoie sur la page dédiée territoire ou tableau de bord</p>
+                    <div class="lien">Accéder</div>
+                  </div>
+                </div>
+                <div class="card-content" style="background-image:url(img/background-text.png)">
+                  <div class="description">
+                    <h3>Térritoires et régions</h3>
+                    <p>Renvoie sur la page dédiée territoire ou tableau de bord</p>
+                    <div class="lien">Accéder</div>
+                  </div>
+                </div>
+                -->
+            </div>
+          </div>
+        </ods-dataset-context>
+        <a href="/reutilisations" class="bouton bouton-primary"> Toutes les datavisualisations</a>
+        <a href="/actualites" class="bouton bouton-outline">Toutes les actualités</a>
+        <div style="margin-top:80px;position:relative;">
+          <img alt="" src="/img/background-home-2.svg" class="bg_home" style="position:absolute;width:1750px;left:-35%;top:20px;opacity:0.8;z-index:-1">
+          <h2>Les jeux de données incontournables</h2>
+
+          <!-- <ods-most-popular-datasets context="catalog" ></ods-most-popular-datasets> -->
+
+          <ods-catalog-context context="catalog" catalog-domain="https://odre.opendatasoft.com"
+            ods-domain-statistics catalog-parameters="{'sort':'explore.download_count'}">
+            <div class="grid" style="grid-template-columns:1fr 1fr 1fr;">
+              <a ods-results="contenus" ods-results-context="catalog"
+                ods-results-max="6" ng-repeat="contenu in contenus"
+                href="/explore/dataset/{{contenu.datasetid}}"
+                class="card-content" style="height:180px;background-image:url('/img/theme-{{contenu.metas.theme[0] ?contenu.metas.theme[0] :'Consommation'}}.svg');background-repeat:no-repeat;background-size:80px">
+                <div class="tag">Publié le :&nbsp;{{contenu.metas.data_processed  | date : 'fullDate' | capitalize }}</div>
+                <div class="background-filter"  >
+                  <div class="description">
+
+                    <h3>{{contenu.metas.title}}</h3>
+                    <p>{{contenu.extra_metas.explore.download_count}} téléchargements</p>
+                    <div class="lien">Accéder</div>
+                  </div>
+                </div>
+
+              </a>
+            </div>
+
+            <a href="/explore?sort=explore.download_count" class="bouton bouton-primary">Explorez les jeux de données</a>
+
+          </ods-catalog-context>
+
+
+
+        </div>
+      </div>
+      <!-- <div style="background:var(--black);padding-top:80px;padding-bottom:80px;position:relative">
+        <div class="maxwidth">
+          <h2 style="color:#fff">QUI-SOMMES NOUS</h2>
+           <video controls src="http://umamidata.com/static/prez.mp4" poster="/img/preview-video.jpg" width="100%">Lancement de la plateforme ODRÉ</video>
+
+        </div>
+      </div> -->
+    </div>
+
+  </ods-catalog-context>
+</div>
+
+
+<script nonce="3ae98e8956b38e5139b0f3becfd37eba" src="/js/home.js"></script>
+
+  <footer style="background:var(--blacker);padding: 60px 0px;display:flex; align-items:center;justify-content:center" class="footer">
+  <div class="ods-front-footer">
+
+      <a style="display:inline-block; margin-left:15px;color:#fff"  href="https://odre.opendatasoft.com/pages/conditions-utilisation-v2/">Conditions d'utilisation</a>
+
+      <a style="display:inline-block; margin-left:15px;color:#fff"  href="https://odre.opendatasoft.com/pages/politique-gestion-dp-v2/">Politique de gestion des données personnelles</a>
+
+      <a style="display:inline-block; margin-left:15px;color:#fff"  href="https://odre.opendatasoft.com/pages/chartes-cookies-v2/">Charte des cookies</a>
+
+
+  </div>
+  </footer>
+
+
+
+
+
+
+
+
+<script nonce="3ae98e8956b38e5139b0f3becfd37eba">
+  AOS.init();
+
+
+</script>
+
+</body>
+
+
+</html>
