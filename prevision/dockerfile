@@ -1,0 +1,18 @@
+# Étape 1 : Image de base
+FROM python:3.10-slim
+
+# Étape 2 : Définir le répertoire de travail dans le conteneur
+WORKDIR /app
+
+# Étape 3 : Copier les fichiers du projet dans l'image Docker
+COPY . /app
+
+# Étape 4 : Installer les dépendances
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+# Étape 5 : Créer les répertoires nécessaires à l'exécution (si tu ne veux pas les créer dynamiquement)
+RUN mkdir -p data/raw/annuel data/raw/calendar data/processed models
+
+# Étape 6 : Définir le script principal à exécuter
+CMD ["python", "main.py"]
