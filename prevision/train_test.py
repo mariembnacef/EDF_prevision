@@ -239,25 +239,39 @@ def evaluer_modele(model, X_train, X_val, y_train, y_val):
         'overfitting': diff_r2 > 0.05
     }
 
-def sauvegarder_modele(model, nom_fichier="models/xgboost_conso_best_model.pkl"):
+import os
+import joblib
+from datetime import datetime
+
+def sauvegarder_modele(model, nom_fichier_base="models/xgboost_conso_best_model"):
     """
-    Fonction pour sauvegarder le modèle entrainé
+    Fonction pour sauvegarder le modèle entraîné,
+    en ajoutant la date et l'heure au nom du fichier.
     
     Args:
         model: Modèle à sauvegarder
-        nom_fichier (str): Chemin où sauvegarder le modèle
+        nom_fichier_base (str): Chemin et préfixe pour le fichier (sans extension)
         
     Returns:
-        str: Chemin du fichier sauvegardé
+        str: Chemin complet du fichier sauvegardé
     """
+    # Formater la date et l'heure actuelles
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Construire le nom de fichier final
+    nom_dossier = os.path.dirname(nom_fichier_base)
+    base = os.path.basename(nom_fichier_base)
+    nom_fichier = os.path.join(nom_dossier, f"{base}_{timestamp}.pkl")
+    
     # Créer le répertoire si nécessaire
-    os.makedirs(os.path.dirname(nom_fichier), exist_ok=True)
+    os.makedirs(nom_dossier, exist_ok=True)
     
     # Sauvegarder le modèle
     joblib.dump(model, nom_fichier)
     print(f"✅ Modèle sauvegardé sous '{nom_fichier}'")
     
     return nom_fichier
+
 
 def visualiser_resultats(y_test, y_pred, features_importance=None):
     """
