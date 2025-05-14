@@ -15,7 +15,7 @@ import sys
 import subprocess
 from datetime import datetime
 
-# Impormodues personnalisés
+# Impormodus personnalisés
 import processing_data
 import train_test
 
