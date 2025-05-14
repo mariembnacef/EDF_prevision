@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- cding: utf-8 -*-
 
 """
 Pipeline complète de traitement des données de consommation électrique et modélisation
