@@ -15,7 +15,7 @@ import sys
 import subprocess
 from datetime import datetime
 
-# Import des modules personnalisés
+# Import modules personnalisés
 import processing_data
 import train_test
 
