@@ -4,17 +4,24 @@ FROM python:3.9-slim
 # Définit le répertoire de travail
 WORKDIR /app
 
-# Copie du fichier requirements_api.txt
-COPY requirements.txt ./
+# Installation des dépendances système pour XGBoost
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Installation des dépendances
-RUN pip install --no-cache-dir -r requirements.txt
+# Copie et installation des dépendances d'abord (pour profiter du cache Docker)
+COPY requirements.txt .
+RUN pip install -r requirements.txt xgboost scikit-learn
 
-# Copie du code de l'API
+# Créer explicitement le répertoire models
+RUN mkdir -p models
+
+# Copie du code de l'API (vous avez un COPY répété qui est superflu)
 COPY . /app
 
 # Expose le port FastAPI
 EXPOSE 8001
 
 # Commande par défaut pour lancer l'API
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8001"]
