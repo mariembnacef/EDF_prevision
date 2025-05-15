@@ -8,7 +8,7 @@ from datetime import datetime, date, time as dt_time
 from dateutil.easter import easter
 from sklearn.metrics import mean_squared_error, r2_score
 
-# --- Préparation des données ---
+# --- Prparation des données ---
 def preparer_donnees(df: pd.DataFrame) -> (pd.DataFrame, pd.Series, pd.DatetimeIndex):
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
     df['Heures'] = pd.to_datetime(df['Heures'], format='%H:%M', errors='coerce').dt.time
