@@ -31,7 +31,7 @@ def get_latest_model_path(models_dir: str) -> str:
     _, latest_fname = max(candidates, key=lambda x: x[0])
     return os.path.join(models_dir, latest_fname)
 
-# --- Chargement du modèle a démarrage ---
+# --- Chargemen du modèle a démarrage ---
 MODELS_DIR = "models"
 try:
     MODEL_PATH = get_latest_model_path(MODELS_DIR)

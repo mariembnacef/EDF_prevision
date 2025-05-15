@@ -93,7 +93,7 @@ if models and df_test is not None:
     st.subheader("Métriques de performance")
     st.table(df_metrics)
 
-    # Affichage du meilleur modèle selon RMSE
+    # Affihage du meilleur modèle selon RMSE
     best_rmse = df_metrics['RMSE'].idxmin()
     best_values = df_metrics.loc[best_rmse]
     st.markdown(f"**Meilleur modèle :** {best_rmse} (RMSE={best_values['RMSE']:.2f}, R2={best_values['R2']:.3f})")
