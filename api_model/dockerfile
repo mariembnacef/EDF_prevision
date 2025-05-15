@@ -1,0 +1,20 @@
+# Utilise une image Python légère
+FROM python:3.9-slim
+
+# Définit le répertoire de travail
+WORKDIR /app
+
+# Copie du fichier requirements_api.txt
+COPY requirements_api.txt ./
+
+# Installation des dépendances
+RUN pip install --no-cache-dir -r requirements_api.txt
+
+# Copie du code de l'API
+COPY . /app
+
+# Expose le port FastAPI
+EXPOSE 8001
+
+# Commande par défaut pour lancer l'API
+CMD ["uvicorn", "api_iso:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]

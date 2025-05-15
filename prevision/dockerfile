@@ -1,15 +1,13 @@
-# Étape 1 : Image de base
-FROM python:3.10-slim
 
-# Étape 2 : Définir le répertoire de travail dans le conteneur
+FROM python:3.10
 WORKDIR /app
-
-# Étape 3 : Copier les fichiers du projet dans l'image Docker
 COPY . /app
-
-# Étape 4 : Installer les dépendances
-RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+# Installation de Google Chrome
+RUN apt-get update && apt-get install -y wget unzip && \
+    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+    apt install -y ./google-chrome-stable_current_amd64.deb && \
+    rm google-chrome-stable_current_amd64.deb
 
 # Étape 5 : Créer les répertoires nécessaires à l'exécution (si tu ne veux pas les créer dynamiquement)
 RUN mkdir -p data/raw/annuel data/raw/calendar data/processed models
