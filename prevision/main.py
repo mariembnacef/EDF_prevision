@@ -147,7 +147,7 @@ def main():
         print(f"❌ ERREUR lors de la sauvegarde du modèle: {str(e)}")
         return 1
     
-    # Affichae du temps d'exécution
+    # Affichae dtemps d'exécution
     execution_time = time.time() - start_time
     print(f"\n✨ Pipeline terminée en {execution_time:.2f} secondes ({execution_time/60:.2f} minutes)")
     print(f"📊 Modèle final - R²: {resultats['r2_val']:.4f}, RMSE: {resultats['rmse_val']:.2f}")
