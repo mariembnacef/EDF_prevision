@@ -54,7 +54,7 @@ def preparer_donnees(df: pd.DataFrame) -> (pd.DataFrame, pd.Series, pd.DatetimeI
     index = pd.DatetimeIndex(df['DateTime'])
     return X, y, index
 
-# --- Streamlit UI ---
+# --- Sttreamlit UI ---
 st.title("Comparaison de modèles XGBoost pour la consommation électrique")
 
 # Chargement des modèles
