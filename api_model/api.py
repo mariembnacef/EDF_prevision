@@ -1,4 +1,6 @@
-# api_is.py
+import os
+import re
+from datetime import datetime
 from fastapi import FastAPI, HTTPException, Query
 from dateutil import parser as dtparser
 from datetime import date, time
@@ -8,12 +10,32 @@ import joblib
 from dateutil.easter import easter
 import uvicorn
 
-# --- Chargement du mmodèle au démarrage ---
-MODEL_PATH = "models/xgboost_conso_model_20250514_135307.pkl"
+# --- Fonction pour récupérer le chemin du dernier modèle ---
+def get_latest_model_path(models_dir: str, pattern: str = r"xgboost_conso_model_(\d{8}_\d{6})\.pkl") -> str:
+    """
+    Parcourt le dossier models_dir, extrait le timestamp des fichiers selon `pattern`,
+    et renvoie le chemin du fichier ayant le plus grand timestamp.
+    """
+    candidates = []
+    for fname in os.listdir(models_dir):
+        m = re.match(pattern, fname)
+        if m:
+            ts = datetime.strptime(m.group(1), "%Y%m%d_%H%M%S")
+            candidates.append((ts, fname))
+    if not candidates:
+        raise FileNotFoundError(f"Aucun modèle trouvé dans {models_dir}")
+    # trier par date et prendre le plus récent
+    latest_fname = sorted(candidates, key=lambda x: x[0])[-1][1]
+    return os.path.join(models_dir, latest_fname)
+
+# --- Chargement du modèle au démarrage ---
+MODELS_DIR = "models"
 try:
+    MODEL_PATH = get_latest_model_path(MODELS_DIR)
     model = joblib.load(MODEL_PATH)
+    print(f"Modèle chargé depuis {MODEL_PATH}")
 except Exception as e:
-    raise RuntimeError(f"Impossible de charger le modèle depuis {MODEL_PATH}: {e}")
+    raise RuntimeError(f"Impossible de charger le modèle : {e}")
 
 app = FastAPI(title="API Prédiction Consommation (ISO datetime)")
 
@@ -52,7 +74,7 @@ def predict(
         raise HTTPException(status_code=400, detail=f"Impossible de parser le datetime : {e}")
 
     d = dt_obj.date()
-    h = dt_obj.time()   # ← ici
+    h = dt_obj.time()
 
     # construire les features
     feat = {
