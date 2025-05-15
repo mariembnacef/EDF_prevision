@@ -10,22 +10,25 @@ import joblib
 from dateutil.easter import easter
 import uvicorn
 
-# --- Fonction pour récupérer le chemin du dernier modèle ---
-def get_latest_model_path(models_dir: str, pattern: str = r"xgboost_conso_model_(\d{8}_\d{6})\.pkl") -> str:
+def get_latest_model_path(models_dir: str) -> str:
     """
-    Parcourt le dossier models_dir, extrait le timestamp des fichiers selon `pattern`,
-    et renvoie le chemin du fichier ayant le plus grand timestamp.
+    Parcourt models_dir, extrait tous les timestamps de la forme YYYYMMDD_HHMMSS
+    dans chaque nom de fichier, et renvoie le chemin du fichier dont le dernier
+    timestamp (le plus grand) est le plus récent.
     """
     candidates = []
+    ts_pattern = re.compile(r"(\d{8}_\d{6})")
     for fname in os.listdir(models_dir):
-        m = re.match(pattern, fname)
-        if m:
-            ts = datetime.strptime(m.group(1), "%Y%m%d_%H%M%S")
-            candidates.append((ts, fname))
+        # on trouve toutes les chaînes au format YYYYMMDD_HHMMSS
+        matches = ts_pattern.findall(fname)
+        if matches:
+            # on convertit chaque match en datetime, on prend le max
+            latest_ts = max(datetime.strptime(ts, "%Y%m%d_%H%M%S") for ts in matches)
+            candidates.append((latest_ts, fname))
     if not candidates:
         raise FileNotFoundError(f"Aucun modèle trouvé dans {models_dir}")
-    # trier par date et prendre le plus récent
-    latest_fname = sorted(candidates, key=lambda x: x[0])[-1][1]
+    # trier par timestamp et prendre le plus récent
+    _, latest_fname = max(candidates, key=lambda x: x[0])
     return os.path.join(models_dir, latest_fname)
 
 # --- Chargement du modèle au démarrage ---
@@ -39,7 +42,7 @@ except Exception as e:
 
 app = FastAPI(title="API Prédiction Consommation (ISO datetime)")
 
-# --- Helpers pour features ---
+# --- Helpers pour features (inchangés) ---
 def infer_season(m: int) -> int:
     if m in (9,10,11): return 1
     if m in (12,1,2):  return 2
@@ -67,7 +70,6 @@ def predict(
         description="Datetime au format ISO8601, ex. 2014-09-01T00:00:00Z ou 2025-05-14T22:59:07.941Z"
     )
 ):
-    # parse ISO datetime
     try:
         dt_obj = dtparser.isoparse(datetime_iso)
     except Exception as e:
@@ -76,7 +78,6 @@ def predict(
     d = dt_obj.date()
     h = dt_obj.time()
 
-    # construire les features
     feat = {
         "Weekend": int(d.weekday() >= 5),
         "mois": d.month,
