@@ -8,7 +8,7 @@ import joblib
 from dateutil.easter import easter
 import uvicorn
 
-# --- Chargement du modèle au démarrage ---
+# --- Chargement du mmodèle au démarrage ---
 MODEL_PATH = "models/xgboost_conso_model_20250514_135307.pkl"
 try:
     model = joblib.load(MODEL_PATH)
