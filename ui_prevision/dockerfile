@@ -16,5 +16,5 @@ COPY . /app
 # Expose le port Streamlit par défaut
 EXPOSE 8501
 
-# Commande par défaut pour lancer l'application
+# Command par défaut pour lancer l'application
 CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
