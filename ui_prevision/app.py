@@ -18,7 +18,7 @@ def get_best_model_path_from_mlflow(
     maximize: bool = True,
     artifact_subpath: str = "model"
 ) -> str:
-    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://37.59.218.166:5000")
     mlflow.set_tracking_uri(tracking_uri)
     client = MlflowClient()
 

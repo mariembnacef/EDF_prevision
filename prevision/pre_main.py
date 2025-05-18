@@ -89,7 +89,7 @@ def setup_mlflow() -> str:
     Returns:
         str: URI de tracking MLflow
     """
-    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://37.59.218.166/:5000")
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment("conso-electrique-xgboost")
     return tracking_uri

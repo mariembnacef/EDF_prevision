@@ -21,7 +21,7 @@ def get_best_model_path_from_mlflow(
     les trie (DESC si maximize else ASC) et télécharge le meilleur artefact.
     """
     # 1. Connexion à MLflow
-    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://37.59.218.166/:5000")
     mlflow.set_tracking_uri(tracking_uri)
     client = MlflowClient()
 
