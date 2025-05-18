@@ -1,16 +1,30 @@
+FROM python:3.10-slim
 
-FROM python:3.10
+# 1. Variables d’environnement
+ENV PYTHONUNBUFFERED=1 \
+    BACKEND_STORE_URI=sqlite:///mlflow.db \
+    ARTIFACT_ROOT=/app/artifacts \
+    MLFLOW_TRACKING_URI=http://127.0.0.1:5000 \
+    # On passe des options à Gunicorn pour MLflow
+    GUNICORN_CMD_ARGS="--timeout 120 --workers 2"
+
 WORKDIR /app
+
+# 2. Installer les dépendances Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 3. Copier le code
 COPY . /app
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
-# Installation de Google Chrome
-RUN apt-get update && apt-get install -y wget unzip && \
-    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    apt install -y ./google-chrome-stable_current_amd64.deb && \
-    rm google-chrome-stable_current_amd64.deb
 
-# Étape 5 : Créer les répertoires nécessaires à l'exécution (si tu ne veux pas les créer dynamiquement)
-RUN mkdir -p data/raw/annuel data/raw/calendar data/processed models
+# 4. Créer les répertoires pour MLflow
+RUN mkdir -p /app/artifacts
 
-# Étape 6 : Définir le script principal à exécuter
-CMD ["python", "pre_main.py"]
+# 5. Exposer le port MLflow
+EXPOSE 5000
+
+# 6. Copier et rendre exécutable l’entrypoint
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]

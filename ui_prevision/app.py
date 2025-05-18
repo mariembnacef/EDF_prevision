@@ -1,3 +1,4 @@
+
 import os
 import streamlit as st
 import pandas as pd
@@ -48,18 +49,23 @@ def get_best_model_path_from_mlflow(
 st.sidebar.header("🔄 Chargement du modèle")
 model = None
 model_name = None
-with st.sidebar.spinner("Chargement depuis MLflow…"):
+
+# Utilise st.spinner() et affiche le résultat dans la sidebar
+with st.spinner("Chargement depuis MLflow…"):
     try:
         EXP_NAME = "conso-electrique-xgboost"
         path = get_best_model_path_from_mlflow(
-            EXP_NAME, metric_name="r2_val", maximize=True, artifact_subpath="model"
+            EXP_NAME,
+            metric_name="r2_val",
+            maximize=True,
+            artifact_subpath="model"
         )
         model = joblib.load(path)
         model_name = os.path.basename(path)
         st.sidebar.success(f"Modèle MLflow chargé: {model_name}")
     except Exception as e_ml:
         st.sidebar.error(f"MLflow KO: {e_ml}")
-        # fallback
+        # fallback local
         local_models = glob.glob(os.path.join("models", "*.pkl"))
         if local_models:
             latest = max(local_models, key=os.path.getmtime)
@@ -128,7 +134,7 @@ def preparer_donnees(df: pd.DataFrame):
 # --- Interface principale ---
 st.title("Comparaison consommations réelles vs prédiction")
 
-# Chargement test
+# Chargement du jeu de test
 DEFAULT_TEST = 'test_data.tsv'
 if os.path.exists(DEFAULT_TEST):
     df_test = pd.read_csv(DEFAULT_TEST, sep='\t', encoding='latin1')
@@ -157,8 +163,9 @@ if df_test is not None:
     st.subheader("Courbe temps réel vs prédiction")
     st.line_chart(df_plot)
 
-# Prédiction unique via API
+# --- Prédiction unique via API ---
 st.sidebar.header("🔮 Prédiction unique via API")
+
 dt_input = st.sidebar.text_input("Datetime ISO", "2025-05-15T12:00:00Z")
 api_url = st.sidebar.text_input("API URL", "http://localhost:8001/predict/")
 if st.sidebar.button("Prédire"):

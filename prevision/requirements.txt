@@ -58,7 +58,8 @@ python-dateutil
 python-dotenv
 pytz
 pyzmq
-mlflow 
+mlflow
+protobuf
 prefect
 requests
 requests-html
