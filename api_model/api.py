@@ -1,44 +1,79 @@
 import os
-import re
-from datetime import datetime
+import joblib
+import mlflow
+from mlflow.tracking import MlflowClient
 from fastapi import FastAPI, HTTPException, Query
 from dateutil import parser as dtparser
-from datetime import date, time
-import pandas as pd
-import numpy as np
-import joblib
+from datetime import date, time, datetime
 from dateutil.easter import easter
+import pandas as pd
 import uvicorn
 
-def get_latest_model_path(models_dir: str) -> str:
+def get_best_model_path_from_mlflow(
+    experiment_name: str,
+    metric_name: str = "r2_val",
+    maximize: bool = True,
+    artifact_subpath: str = "model"
+) -> str:
     """
-    Parcourt models_dir, extrait tous les timestamps de la forme YYYYMMDD_HHMMSS
-    dans chaque nom de fichier, et renvoie le chemin du fichier dont le dernier
-    timestamp (le plus grand) est le plus récent.
+    Recherche dans MLflow l'expérimentation `experiment_name`,
+    récupère tous les runs, filtre ceux qui ont la métrique `metric_name`,
+    les trie (DESC si maximize else ASC) et télécharge le meilleur artefact.
     """
-    candidates = []
-    ts_pattern = re.compile(r"(\d{8}_\d{6})")
-    for fname in os.listdir(models_dir):
-        # on trouve toutes les chaînes au format YYYYMMDD_HHMMSS
-        matches = ts_pattern.findall(fname)
-        if matches:
-            # on convertit chaque match en datetime, on prend le max
-            latest_ts = max(datetime.strptime(ts, "%Y%m%d_%H%M%S") for ts in matches)
-            candidates.append((latest_ts, fname))
-    if not candidates:
-        raise FileNotFoundError(f"Aucun modèle trouvé dans {models_dir}")
-    # trier par timestamp et prendre le plus récent
-    _, latest_fname = max(candidates, key=lambda x: x[0])
-    return os.path.join(models_dir, latest_fname)
+    # 1. Connexion à MLflow
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+    mlflow.set_tracking_uri(tracking_uri)
+    client = MlflowClient()
 
-# --- Chargemen du modèle a démarrage ---
-MODELS_DIR = "models"
+    # 2. Récupération de l'expérience
+    exp = client.get_experiment_by_name(experiment_name)
+    if exp is None:
+        raise RuntimeError(f"Expérience MLflow '{experiment_name}' introuvable")
+    exp_id = exp.experiment_id
+
+    # 3. Lister tous les runs (pas de filter SQL)
+    runs = client.search_runs(experiment_ids=[exp_id], max_results=1000)
+
+    # 4. Filtrer ceux qui ont la métrique
+    valid_runs = [
+        r for r in runs
+        if metric_name in r.data.metrics and r.data.metrics[metric_name] is not None
+    ]
+    if not valid_runs:
+        raise RuntimeError(f"Aucun run avec la métrique '{metric_name}' trouvé")
+
+    # 5. Trier et prendre le meilleur
+    valid_runs.sort(
+        key=lambda r: r.data.metrics[metric_name],
+        reverse=bool(maximize)
+    )
+    best_run = valid_runs[0]
+
+    # 6. Télécharger l'artefact
+    local_dir = mlflow.artifacts.download_artifacts(
+        run_id=best_run.info.run_id,
+        artifact_path=artifact_subpath
+    )
+    # 7. Trouver un .pkl ou .joblib
+    for fname in os.listdir(local_dir):
+        if fname.endswith((".pkl", ".joblib")):
+            return os.path.join(local_dir, fname)
+
+    raise FileNotFoundError(f"Aucun .pkl/.joblib dans '{local_dir}'")
+
+# --- Chargement du modèle au démarrage ---
+EXPERIMENT_NAME = "conso-electrique-xgboost"
 try:
-    MODEL_PATH = get_latest_model_path(MODELS_DIR)
+    MODEL_PATH = get_best_model_path_from_mlflow(
+        EXPERIMENT_NAME,
+        metric_name="r2_val",
+        maximize=True,
+        artifact_subpath="model"
+    )
     model = joblib.load(MODEL_PATH)
-    print(f"Modèle chargé depuis {MODEL_PATH}")
+    print(f"Modèle chargé depuis MLflow (run optimal) : {MODEL_PATH}")
 except Exception as e:
-    raise RuntimeError(f"Impossible de charger le modèle : {e}")
+    raise RuntimeError(f"Impossible de charger le modèle depuis MLflow : {e}")
 
 app = FastAPI(title="API Prédiction Consommation (ISO datetime)")
 
@@ -67,9 +102,10 @@ def is_holiday(d: date) -> int:
 def predict(
     datetime_iso: str = Query(
         ...,
-        description="Datetime au format ISO8601, ex. 2014-09-01T00:00:00Z ou 2025-05-14T22:59:07.941Z"
+        description="Datetime ISO8601, ex. 2025-05-14T22:59:07.941Z"
     )
 ):
+    # Parse
     try:
         dt_obj = dtparser.isoparse(datetime_iso)
     except Exception as e:
@@ -78,6 +114,7 @@ def predict(
     d = dt_obj.date()
     h = dt_obj.time()
 
+    # Création des features
     feat = {
         "Weekend": int(d.weekday() >= 5),
         "mois": d.month,
@@ -99,6 +136,7 @@ def predict(
 
     X = pd.DataFrame([feat])
 
+    # Prédiction
     try:
         pred = model.predict(X)[0]
     except Exception as e:
@@ -110,4 +148,4 @@ def predict(
     }
 
 if __name__ == "__main__":
-    uvicorn.run("api:app", host="0.0.0.0", port=8001, reload=True)
+    uvicorn.run("api:app", host="0.0.0.0", port=8003, reload=True)

@@ -58,6 +58,8 @@ python-dateutil
 python-dotenv
 pytz
 pyzmq
+mlflow 
+prefect
 requests
 requests-html
 scikit-learn
