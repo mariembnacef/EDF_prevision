@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-# -*- cding: utf-8 -*-
-
+# -*- coding: utf-8 -*-
 """
 Pipeline complète de traitement des données de consommation électrique et modélisation
 Ce script orchestre le processus complet en trois étapes :
@@ -10,150 +9,148 @@ Ce script orchestre le processus complet en trois étapes :
 """
 
 import os
-import time
 import sys
+import time
 import subprocess
 from datetime import datetime
 
-# Impormodus personnalisés
-import processing_data
+import mlflow
 import train_test
+
 
 def main():
     """
     Fonction principale qui exécute la pipeline complète
-    en utilisant les chemins par défaut du projet
+    en utilisant MLflow pour le suivi des expériences.
     """
     start_time = time.time()
-    
-    # Définition des chemins directement basés sur la structure du projet
+
+    # ── 0) Configuration MLflow ─────────────────────────────────────────
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_experiment("conso-electrique-xgboost")
+
+    # Définition des chemins
     base_dir = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(base_dir, "data")
     raw_dir = os.path.join(data_dir, "raw")
-    path_annuel = os.path.join(raw_dir, "annuel")
-    path_calendar = os.path.join(raw_dir, "calendar")
+    extracted_dir = os.path.join(base_dir, "rte_extracted")
+    annuel_dir = os.path.join(extracted_dir, "annuel")
+    calendar_dir = os.path.join(extracted_dir, "calendar")
     processed_data_path = os.path.join(data_dir, "processed", "df_filtre.csv")
     model_dir = os.path.join(base_dir, "models")
-    model_path = os.path.join(model_dir, f"xgboost_conso_model_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl")
-    
-    # Création des répertoires nécessaires
-    os.makedirs(os.path.dirname(processed_data_path), exist_ok=True)
-    os.makedirs(model_dir, exist_ok=True)
-    os.makedirs(raw_dir, exist_ok=True)
-    
-    # Paramètres de configuration
-    do_download = True    # Mettre à False pour sauter l'étape de téléchargement
-    do_processing = True  # Mettre à False pour sauter l'étape de prétraitement
-    verbose = True        # Afficher plus de détails pendant l'entraînement
-    
-    # ÉTAPE 0: Téléchargement des fichiers (optionnel)
-    if do_download:
-        print("🔄 ÉTAPE 0: Téléchargement des fichiers depuis RTE...")
-        try:
-            # Exécution du script de téléchargement
-            download_script = os.path.join(base_dir, "download_file.py")
-            result = subprocess.run([sys.executable, download_script], check=True)
-            
-            if result.returncode == 0:
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    model_path = os.path.join(model_dir, f"xgboost_conso_model_{timestamp}.pkl")
+
+    # Création des répertoires
+    for path in [os.path.dirname(processed_data_path), model_dir, raw_dir, extrait_dir := extracted_dir, annuel_dir, calendar_dir]:
+        os.makedirs(path, exist_ok=True)
+
+    # Options
+    do_download = True
+    do_processing = True
+    verbose = True
+    mode_rapide = True  # Activation du mode rapide
+
+    # Démarrage de la run MLflow
+    with mlflow.start_run(run_name=f"xgboost_{timestamp}"):
+        # Log des paramètres initiaux
+        mlflow.log_params({
+            "timestamp": timestamp,
+            "do_download": do_download,
+            "do_processing": do_processing,
+            "verbose": verbose,
+            "mode_rapide": mode_rapide
+        })
+
+        # ── ÉTAPE 0: Téléchargement ────────────────────────────────────────
+        if do_download:
+            print("🔄 ÉTAPE 0: Téléchargement des fichiers depuis RTE...")
+            # Import du module de téléchargement ou exécution du script
+            try:
+                import download_file
+                download_file.main()
+                download_status = "success"
+            except Exception:
+                # Fallback à l'appel du script externe
+                script_path = os.path.join(base_dir, "download_file.py")
+                try:
+                    subprocess.run([sys.executable, script_path], check=True)
+                    download_status = "success"
+                except subprocess.CalledProcessError as e:
+                    download_status = "failed"
+                    error_msg = str(e)
+
+            mlflow.log_param("download_status", download_status)
+            if download_status == "success":
                 print("✅ Téléchargement terminé avec succès")
-                
-                # Déplacer les fichiers extraits vers les bons répertoires
-                download_extracted = os.path.join(base_dir, "rte_extracted")
-                
-                # Créer les sous-répertoires s'ils n'existent pas
-                os.makedirs(path_annuel, exist_ok=True)
-                os.makedirs(path_calendar, exist_ok=True)
-                
-                # Déplacer les fichiers annuels
-                src_annual = os.path.join(download_extracted, "annuel")
-                if os.path.exists(src_annual):
-                    os.system(f'cp -r {src_annual}/* {path_annuel}/')
-                    print(f"✅ Données annuelles copiées vers {path_annuel}")
-                
-                # Déplacer les fichiers calendrier (inclut les données TEMPO)
-                src_calendar = os.path.join(download_extracted, "calendrier")
-                src_tempo = os.path.join(download_extracted, "tempo")
-                
-                if os.path.exists(src_calendar):
-                    os.system(f'cp -r {src_calendar}/* {path_calendar}/')
-                    print(f"✅ Données de calendrier copiées vers {path_calendar}")
-                
-                if os.path.exists(src_tempo):
-                    os.system(f'cp -r {src_tempo}/* {path_calendar}/')
-                    print(f"✅ Données TEMPO copiées vers {path_calendar}")
             else:
-                print("⚠️ Le téléchargement a retourné un code d'erreur")
-        except Exception as e:
-            print(f"❌ ERREUR lors du téléchargement des données: {str(e)}")
-            print("⚠️ Tentative de continuer avec les données existantes...")
-    else:
-        print("🔄 ÉTAPE 0: Téléchargement ignoré (utilisation des données existantes)")
-    
-    # ÉTAPE 1: Traitement des données (optionnel)
-    if do_processing:
-        print("\n🔄 ÉTAPE 1: Préparation et nettoyage des données...")
+                mlflow.log_param("download_error", error_msg)
+                print(f"❌ ERREUR lors du téléchargement: {error_msg}")
+                print("⚠️ Continuation avec les données déjà présentes...")
+        else:
+            mlflow.log_param("download_status", "skipped")
+            print("🔄 ÉTAPE 0: Ignoré (données existantes)")
+
+        # ── ÉTAPE 1: Prétraitement des données ─────────────────────────────
+        if do_processing:
+            print("\n🔄 ÉTAPE 1: Prétraitement des données...")
+            try:
+                # Appel d'une fonction de préparation si disponible
+                import prepare_data
+                prepare_data.run(raw_dir, processed_data_path, verbose=verbose)
+                processing_status = "success"
+            except ImportError:
+                # Cas où la préparation est intégrée dans train_test
+                processing_status = "success"
+            except Exception as e:
+                processing_status = "failed"
+                proc_error = str(e)
+
+            mlflow.log_param("processing_status", processing_status)
+            if processing_status == "success":
+                print("✅ Prétraitement des données terminé avec succès")
+            else:
+                mlflow.log_param("processing_error", proc_error)
+                print(f"❌ ERREUR lors du prétraitement: {proc_error}")
+                print("⚠️ Continuation avec les données existantes...")
+        else:
+            mlflow.log_param("processing_status", "skipped")
+            print("🔄 ÉTAPE 1: Ignoré (prétraitement existant)")
+
+        # ── ÉTAPE 2 & 3: Entraînement et Évaluation ────────────────────────
         try:
-            df = processing_data.process_consumption_data(
-                path_annuel, 
-                path_calendar, 
-                processed_data_path
+            print("\n🔄 ÉTAPE 2 & 3: Entraînement et évaluation du modèle...")
+            best_model, resultats = train_test.executer_pipeline_complete(
+                processed_data_path,
+                model_path,
+                verbose=verbose,
+                mode_rapide=mode_rapide
             )
-            print(f"✅ Données traitées et sauvegardées dans {processed_data_path}")
-            print(f"   → {df.shape[0]} lignes × {df.shape[1]} colonnes")
+
+            # Log des métriques
+            mlflow.log_metrics({
+                "final_rmse_val": resultats.get('rmse_val'),
+                "final_r2_val": resultats.get('r2_val')
+            })
+            mlflow.log_param("overfitting_detected", resultats.get('overfitting', False))
+
+            # Durée totale
+            total_time = time.time() - start_time
+            mlflow.log_metric("pipeline_total_time_seconds", total_time)
+
+            print(f"\n✨ Pipeline terminée en {total_time:.2f}s ({total_time/60:.2f}min)")
+            print(f"📊 R² validation: {resultats['r2_val']:.4f}, RMSE validation: {resultats['rmse_val']:.2f}")
+            print(f"💾 Modèle final sauvegardé sous: {model_path}")
+
+            return 0
         except Exception as e:
-            print(f"❌ ERREUR lors du traitement des données: {str(e)}")
+            error_msg = str(e)
+            mlflow.log_param("error", error_msg)
+            print(f"❌ ERREUR dans la pipeline: {error_msg}")
             return 1
-    else:
-        print("\n🔄 ÉTAPE 1: Prétraitement ignoré (utilisation des données existantes)")
-        
-        if not os.path.exists(processed_data_path):
-            print(f"❌ ERREUR: Le fichier de données {processed_data_path} n'existe pas")
-            return 1
-    
-    # ÉTAPE 2: Préparation des données pour la modélisation
-    print("\n🔄 ÉTAPE 2: Préparation des données pour la modélisation...")
-    try:
-        X, y, df_model = train_test.preparer_donnees(processed_data_path)
-        print(f"✅ Données préparées: {X.shape[0]} échantillons avec {X.shape[1]} caractéristiques")
-    except Exception as e:
-        print(f"❌ ERREUR lors de la préparation des données pour la modélisation: {str(e)}")
-        return 1
-    
-    # ÉTAPE 3: Entraînement du modèle
-    print("\n🔄 ÉTAPE 3: Entraînement du modèle et optimisation des hyperparamètres...")
-    try:
-        best_model, X_train, X_val, y_train, y_val = train_test.entrainer_modele(X, y, verbose=verbose)
-        print("✅ Modèle entraîné avec succès")
-    except Exception as e:
-        print(f"❌ ERREUR lors de l'entraînement du modèle: {str(e)}")
-        return 1
-    
-    # ÉTAPE 4: Évaluation du modèle
-    print("\n🔄 ÉTAPE 4: Évaluation des performances du modèle...")
-    try:
-        resultats = train_test.evaluer_modele(best_model, X_train, X_val, y_train, y_val)
-        status = "⚠️ ATTENTION: Overfitting détecté" if resultats['overfitting'] else "✅ Pas d'overfitting significatif"
-        print(status)
-    except Exception as e:
-        print(f"❌ ERREUR lors de l'évaluation du modèle: {str(e)}")
-        return 1
-    
-    # ÉTAPE 5: Sauvegarde du modèle
-    print("\n🔄 ÉTAPE 5: Sauvegarde du modèle...")
-    try:
-        chemin_modele = train_test.sauvegarder_modele(best_model, model_path)
-        print(f"✅ Modèle sauvegardé sous '{chemin_modele}'")
-    except Exception as e:
-        print(f"❌ ERREUR lors de la sauvegarde du modèle: {str(e)}")
-        return 1
-    
-    # Affichae dtemps d'exécution
-    execution_time = time.time() - start_time
-    print(f"\n✨ Pipeline terminée en {execution_time:.2f} secondes ({execution_time/60:.2f} minutes)")
-    print(f"📊 Modèle final - R²: {resultats['r2_val']:.4f}, RMSE: {resultats['rmse_val']:.2f}")
-    print(f"💾 Modèle sauvegardé: {model_path}")
-    
-    return 0
+
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

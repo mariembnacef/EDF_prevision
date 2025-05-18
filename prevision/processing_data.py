@@ -2,6 +2,10 @@ import pandas as pd
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import warnings
+
+# Ignorer les avertissements spécifiques au début
+warnings.filterwarnings('ignore', category=pd.errors.DtypeWarning)
 
 def process_consumption_data(path_annuel, path_calendar, output_path=None):
     """
@@ -15,31 +19,75 @@ def process_consumption_data(path_annuel, path_calendar, output_path=None):
     Returns:
         pd.DataFrame: The processed and cleaned dataframe
     """
+    print(f"Processing data from {path_annuel} and {path_calendar}")
     
-    # Helper function to read dataframes
+    # Helper function to read dataframes with better error handling
     def read_df(path):
-        df = pd.read_csv(path, sep="\t", encoding="latin1", index_col=False)
-        return df
+        try:
+            # Determine the file type based on extension
+            _, ext = os.path.splitext(path)
+            ext = ext.lower()
+            
+            if ext in ['.xls', '.xlsx']:
+                # Read Excel files
+                print(f"Reading Excel file: {path}")
+                df = pd.read_excel(path, engine='openpyxl' if ext == '.xlsx' else None)
+            else:
+                # Read CSV/TXT files with tab delimiter
+                print(f"Reading CSV/TSV file: {path}")
+                df = pd.read_csv(path, sep="\t", encoding="latin1", index_col=False, low_memory=False)
+                
+            return df
+        except Exception as e:
+            print(f"Error reading file {path}: {str(e)}")
+            return None
 
-    # Helper function to merge files from a folder
+    # Helper function to merge files from a folder with improved error handling
     def merge_from_folder(folder_path):
         """
-        Uses read_df to read and merge all CSV or TXT files from a folder.
+        Uses read_df to read and merge all CSV, TXT, XLS, or XLSX files from a folder.
         """
-        all_files = [f for f in os.listdir(folder_path)]
+        # Check if folder exists
+        if not os.path.exists(folder_path):
+            print(f"Folder not found: {folder_path}")
+            return None
+            
+        # List all files in the directory
+        all_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.csv', '.txt', '.xls', '.xlsx'))]
+        
+        if not all_files:
+            print(f"No CSV or TXT files found in {folder_path}")
+            return None
+            
+        print(f"Found {len(all_files)} files in {folder_path}")
+        
         dfs = []
         
         for file in all_files:
             full_path = os.path.join(folder_path, file)
             df = read_df(full_path)
-            dfs.append(df)
+            if df is not None and not df.empty:
+                dfs.append(df)
+                print(f"Successfully read {file}, shape: {df.shape}")
+            else:
+                print(f"Skipping empty or invalid file: {file}")
         
+        if not dfs:
+            print(f"No valid dataframes to concatenate from {folder_path}")
+            return None
+            
         merged_df = pd.concat(dfs, ignore_index=True)
+        print(f"Merged dataframe shape: {merged_df.shape}")
         return merged_df
     
-    # Load and merge data
+    # Load and merge data with error handling
     annuel = merge_from_folder(path_annuel)
     calendrier = merge_from_folder(path_calendar)
+    
+    # Verify we have data to work with
+    if annuel is None or calendrier is None:
+        print("Error: Missing required data (annual or calendar)")
+        return None
     
     # Check for duplicates
     doublons = annuel[annuel.duplicated()]
@@ -51,7 +99,10 @@ def process_consumption_data(path_annuel, path_calendar, output_path=None):
     
     # Process annual data
     annuel.replace("ND", pd.NA, inplace=True)
-    annuel = annuel[annuel["Périmètre"] == "France"]
+    if "Périmètre" in annuel.columns:
+        annuel = annuel[annuel["Périmètre"] == "France"]
+    else:
+        print("Warning: 'Périmètre' column not found in annual data")
     annuel.replace("ND", np.nan, inplace=True)
     
     # Merge datasets by date
@@ -69,6 +120,7 @@ def process_consumption_data(path_annuel, path_calendar, output_path=None):
 
         # Merge
         fusion = pd.merge(annuel, calendrier, on='Date', how=type_jointure)
+        print(f"Merged data shape: {fusion.shape}")
         return fusion
     
     df_final = fusionner_par_date(annuel, calendrier, type_jointure="inner")
@@ -89,6 +141,7 @@ def process_consumption_data(path_annuel, path_calendar, output_path=None):
         
         # Keep only columns that exist in the DataFrame
         colonnes_presentes = [col for col in colonnes_a_garder if col in df.columns]
+        print(f"Keeping columns: {colonnes_presentes}")
         
         return df[colonnes_presentes].copy()
     
@@ -99,11 +152,17 @@ def process_consumption_data(path_annuel, path_calendar, output_path=None):
         """
         Removes rows where 'Heures' is at :15 or :45 and 'Consommation' is NaN.
         """
+        if 'Heures' not in df.columns or 'Consommation' not in df.columns:
+            print("Warning: Required columns missing for quarter-hour filtering")
+            return df
+            
         # Extract minutes as integers (e.g., 15, 30, 45, ...)
         df['Minutes'] = df['Heures'].astype(str).str.slice(3, 5).astype(int)
 
         # Identify rows to remove: minutes = 15 or 45 AND consumption = NaN
         condition_suppr = df['Minutes'].isin([15, 45]) & df['Consommation'].isna()
+        rows_to_remove = condition_suppr.sum()
+        print(f"Removing {rows_to_remove} rows with NaN values at 15/45 minutes")
 
         # Remove these rows
         df_filtré = df[~condition_suppr].copy()
@@ -120,6 +179,10 @@ def process_consumption_data(path_annuel, path_calendar, output_path=None):
         """
         Adds 'Jour', 'Weekend', and 'Saison' columns based on the 'Date' column.
         """
+        if 'Date' not in df.columns:
+            print("Warning: 'Date' column missing for temporal information")
+            return df
+            
         # Ensure 'Date' is in datetime format
         df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
 
@@ -163,8 +226,8 @@ def process_consumption_data(path_annuel, path_calendar, output_path=None):
     def get_comparison_stats(df_original, df_nettoye):
         total_original = len(df_original)
         total_nettoye = len(df_nettoye)
-        nan_original = df_original['Consommation'].isna().sum()
-        nan_nettoye = df_nettoye['Consommation'].isna().sum()
+        nan_original = df_original['Consommation'].isna().sum() if 'Consommation' in df_original.columns else 0
+        nan_nettoye = df_nettoye['Consommation'].isna().sum() if 'Consommation' in df_nettoye.columns else 0
         
         stats = {
             "rows_before": total_original,
@@ -182,6 +245,9 @@ def process_consumption_data(path_annuel, path_calendar, output_path=None):
     
     # Save to file if output path is provided
     if output_path:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+        
         df_filtre.to_csv(output_path, sep="\t", index=False, encoding="latin1")
         print(f"Processed data saved to {output_path}")
     

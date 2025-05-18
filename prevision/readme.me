@@ -1,0 +1,149 @@
+# Documentation technique : Pipeline de Prédiction de Consommation Électrique
+
+## 1. Vue d'ensemble du projet
+
+Ce projet implémente un pipeline complet d'analyse et de prédiction de la consommation électrique en France à partir des données de RTE (Réseau de Transport d'Électricité). Le pipeline est orchestré avec Prefect et comprend les étapes suivantes :
+
+1. **Téléchargement des données** : Collecte automatisée des fichiers historiques de consommation électrique depuis le site de RTE.
+2. **Prétraitement des données** : Nettoyage et transformation des données brutes en un format adapté à la modélisation.
+3. **Modélisation** : Entraînement d'un modèle XGBoost pour prédire la consommation électrique.
+4. **Évaluation et suivi** : Mesure des performances du modèle et suivi des expériences avec MLflow.
+
+## 2. Architecture du projet
+
+Le projet est organisé en 3 modules principaux :
+
+### 2.1. Pipeline principal (`pre_main.py`)
+- Orchestre l'ensemble du workflow avec Prefect
+- Gère la configuration et la coordination des différentes tâches
+- Intègre le suivi des expériences avec MLflow
+
+### 2.2. Téléchargement des données (`download_file.py`)
+- Utilise Selenium et BeautifulSoup pour extraire les liens de téléchargement
+- Télécharge et organise les fichiers historiques du site RTE
+- Catégorise et extrait les fichiers par typologie (annuel, calendrier, TEMPO)
+
+### 2.3. Modélisation (`train_test.py`)
+- Prépare les features pour l'entraînement du modèle
+- Entraîne un modèle XGBoost optimisé
+- Évalue les performances et génère des visualisations
+
+### 2.4. Prétraitement des données (`processing_data.py`)
+- Fusionne les données annuelles avec les informations calendaires
+- Nettoie et enrichit les données avec des variables temporelles
+- Prépare le jeu de données final pour la modélisation
+
+## 3. Description détaillée des modules
+
+### 3.1. Pipeline principal (`pre_main.py`)
+
+#### Fonctions principales :
+- `setup_directories()` : Configure les chemins utilisés dans le pipeline
+- `setup_mlflow()` : Configure MLflow pour le tracking des expériences
+- `download_data()` : Tâche Prefect pour télécharger les données
+- `process_data()` : Tâche Prefect pour prétraiter les données
+- `train_and_evaluate()` : Tâche Prefect pour entraîner et évaluer le modèle
+- `pipeline_consommation_electrique()` : Flow Prefect principal qui orchestre toutes les tâches
+
+#### Paramètres configurables :
+- `do_download` : Active/désactive le téléchargement des données
+- `do_processing` : Active/désactive le prétraitement des données
+- `verbose` : Active/désactive les logs détaillés
+- `mode_rapide` : Active/désactive le mode d'entraînement rapide (sans recherche hyperparamètres)
+
+### 3.2. Téléchargement des données (`download_file.py`)
+
+#### Fonctions principales :
+- `fetch_all_links()` : Récupère tous les liens de téléchargement sur la page RTE
+- `download_file()` : Télécharge un fichier depuis une URL
+- `extract_and_categorize_zip()` : Extrait et catégorise les fichiers ZIP
+- `categorize_and_move()` : Classe les fichiers selon leur typologie
+
+#### Catégories de données :
+- **Annuel** : Données de consommation à l'échelle annuelle ou mensuelle
+- **Calendrier** : Données journalières ou horaires
+- **TEMPO** : Informations spécifiques au dispositif TEMPO d'EDF
+
+### 3.3. Modélisation (`train_test.py`)
+
+#### Fonctions principales :
+- `preparer_donnees()` : Prépare les données pour la modélisation (feature engineering)
+- `entrainer_modele()` : Entraîne un modèle XGBoost optimisé
+- `evaluer_modele()` : Évalue les performances du modèle
+- `executer_pipeline_complete()` : Exécute toute la chaîne de modélisation
+- `sauvegarder_modele()` : Sauvegarde le modèle entraîné
+- `visualiser_resultats()` : Génère des visualisations des résultats
+
+#### Features générées :
+- Variables temporelles (mois, année, jour de semaine, saison)
+- Période de la journée (encodée)
+- Jours fériés français
+- Variables décalées (lags) pour capturer la dynamique temporelle
+
+### 3.4. Prétraitement des données (`processing_data.py`)
+
+#### Fonctions principales :
+- `process_consumption_data()` : Fonction principale de traitement des données
+- `read_df()` : Lit les fichiers de données
+- `merge_from_folder()` : Fusionne tous les fichiers d'un dossier
+- `fusionner_par_date()` : Fusionne les jeux de données par date
+- `garder_colonnes_utiles()` : Filtre pour ne garder que les colonnes pertinentes
+- `supprimer_nan_quart_impair()` : Nettoie les valeurs manquantes aux quarts d'heure impairs
+- `ajouter_infos_temporelles()` : Ajoute des informations temporelles aux données
+
+## 4. Flux de données
+
+1. **Entrée** : Fichiers bruts téléchargés depuis le site RTE
+2. **Prétraitement** : Extraction et fusion des données annuelles et calendaires
+3. **Feature Engineering** : Ajout de variables temporelles et de caractéristiques avancées
+4. **Modélisation** : Division train/test, entraînement XGBoost, évaluation
+5. **Sortie** : Modèle entraîné et métriques de performance
+
+## 5. Suivi des expériences avec MLflow
+
+Le projet utilise MLflow pour suivre les expériences et les performances des modèles :
+
+- **Paramètres enregistrés** : Configuration du pipeline, hyperparamètres du modèle
+- **Métriques suivies** : RMSE, R², détection d'overfitting
+- **Artefacts sauvegardés** : 
+  - Modèle entraîné
+  - Graphiques d'importance des features
+  - Distributions des erreurs
+  - Prédictions vs valeurs réelles
+
+## 6. Structure des dossiers
+
+```
+.
+├── data/
+│   ├── raw/               # Données brutes téléchargées
+│   └── processed/         # Données prétraitées
+├── rte_downloads/         # Fichiers téléchargés depuis RTE
+├── rte_extracted/         # Fichiers extraits et catégorisés
+│   ├── annuel/            # Données annuelles/mensuelles
+│   ├── calendar/          # Données journalières/horaires
+│   └── tempo/             # Données spécifiques TEMPO
+├── models/                # Modèles sauvegardés
+├── pre_main.py            # Pipeline Prefect principal
+├── download_file.py       # Module de téléchargement
+├── train_test.py          # Module d'entraînement et évaluation
+└── processing_data.py     # Module de prétraitement
+```
+
+## 7. Dépendances principales
+
+- **Orchestration** : Prefect
+- **Suivi d'expériences** : MLflow
+- **Modélisation** : XGBoost, scikit-learn
+- **Manipulation de données** : pandas, numpy
+- **Visualisation** : matplotlib, seaborn
+- **Web scraping** : Selenium, BeautifulSoup
+- **Téléchargement** : requests
+
+## 8. Points d'amélioration possibles
+
+1. **Robustesse** : Améliorer la gestion des erreurs pendant le téléchargement
+2. **Performance** : Optimiser l'extraction et le traitement des fichiers volumineux
+3. **Automatisation** : Configurer un planning d'exécution automatique avec Prefect
+4. **Interface** : Développer un tableau de bord pour visualiser les résultats
+5. **Modélisation** : Tester des architectures alternatives (LSTM, Prophet)
