@@ -1,0 +1,14 @@
+feature,importance
+lag_1,0.9017758
+lag_3,0.057652134
+lag_2,0.030458506
+Heures_float,0.0036940852
+periode_jour_code,0.0017443788
+Weekend,0.0011595672
+tempo_num,0.0010052415
+lag_4,0.0006640902
+annee,0.000567093
+saison_num,0.00045512168
+mois,0.00034091072
+jour_ferie,0.00027614983
+jour_semaine,0.00020691923

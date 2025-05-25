@@ -1,0 +1,144 @@
+# EDF\_prévision (branche `moh`)
+
+Ce dépôt contient le projet **EDF\_prévision**, une application de prévision de consommation électrique basée sur des modèles de séries temporelles, avec une interface API et une interface utilisateur Streamlit. La branche `moh` inclut les dernières évolutions de l'architecture, notamment :
+
+* Configuration CI/CD via GitHub Actions
+* Modèles de prévision dans `api_model`
+* Logique de calcul et d'orchestration dans `prevision`
+* Interface Streamlit dans `ui_prevision`
+
+---
+
+## Table des matières
+
+1. [Prérequis](#prérequis)
+2. [Installation](#installation)
+3. [Structure du projet](#structure-du-projet)
+4. [Usage](#usage)
+
+   * [Lancer l'API](#lancer-lapi)
+   * [Lancer l'interface Streamlit](#lancer-linterface-streamlit)
+   * [Notebooks d'exploration](#notebooks-dexploration)
+5. [CI/CD](#cicd)
+6. [Contribuer](#contribuer)
+7. [Licence](#licence)
+
+---
+
+## Prérequis
+
+* **Python** ≥ 3.8
+* **git** pour cloner le dépôt et changer de branche
+
+Les dépendances front-end sont gérées via Python (Streamlit), pas de Node.js nécessaire.
+
+---
+
+## Installation
+
+1. Cloner le dépôt et se placer sur la branche `moh` :
+
+   ```bash
+   git clone https://github.com/mariembnacef/EDF_prevision.git
+   cd EDF_prevision
+   git checkout moh
+   ```
+
+2. Créer et activer un environnement virtuel :
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # sur Linux/macOS
+   venv\Scripts\activate     # sur Windows
+   ```
+
+3. Installer les dépendances Python (incluant Streamlit) :
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## Structure du projet
+
+```
+├── .github/workflows/    # Définition des pipelines CI/CD
+├── api_model/            # Entraînement et sérialisation des modèles de prévision
+│   ├── data_processing/  # Scripts de préparation des données
+│   ├── models/           # Définition et entraînement des modèles
+│   └── util/             # Fonctions utilitaires pour l'API
+├── prevision/            # Logique principale de prévision et orchestration
+│   ├── forecast.py       # Fonction principale de prévision
+│   └── scheduler.py      # Planification et exécution automatisée
+├── ui_prevision/         # Application front-end Streamlit
+│   └── app.py            # Point d'entrée Streamlit
+├── notebooks/            # Notebooks Jupyter pour exploration et analyse
+├── requirements.txt      # Dépendances Python (incluant FastAPI, Streamlit, etc.)
+└── LICENSE               # Fichier de licence
+```
+
+---
+
+## Usage
+
+### Lancer l'API
+
+1. S'assurer que l'environnement virtuel est activé.
+2. Exécuter le serveur :
+
+   ```bash
+   uvicorn api_model.main:app --reload
+   ```
+3. L'API sera accessible sur `http://localhost:8000`.
+
+### Lancer l'interface Streamlit
+
+1. S'assurer que l'environnement virtuel est activé.
+2. Se placer dans le dossier `ui_prevision` :
+
+   ```bash
+   cd ui_prevision
+   ```
+3. Démarrer l'application Streamlit :
+
+   ```bash
+   streamlit run app.py
+   ```
+4. Ouvrir le navigateur à l'adresse indiquée (par défaut `http://localhost:8501`).
+
+### Notebooks d'exploration
+
+* Les notebooks se trouvent dans le dossier `notebooks/`.
+* Ils permettent d'explorer les jeux de données, d'entraîner des modèles hors pipeline et de visualiser les résultats.
+
+---
+
+## CI/CD
+
+La branche `moh` inclut les workflows suivants dans `.github/workflows/` :
+
+* **ci.yml** : exécution des tests unitaires et validation du code Python
+* **lint.yml** : vérification de la qualité du code back-end
+* **deploy.yml** : déploiement automatique (selon configuration) sur un environnement cible
+
+Chaque push sur `moh` déclenche ces pipelines.
+
+---
+
+## Contribuer
+
+Les contributions sont les bienvenues ! Pour contribuer :
+
+1. Forkez le projet
+2. Créez une branche `feature/ma-nouvelle-fonctionnalite`
+3. Committez vos changements et pushiez vers votre fork
+4. Ouvrez une Pull Request sur `mariembnacef/EDF_prevision` ciblant `moh`
+
+Merci de respecter le style de code et d'ajouter des tests si nécessaire.
+
+---
+
+## Licence
+
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
