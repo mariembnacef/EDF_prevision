@@ -13,7 +13,7 @@ import requests
 import plotly.graph_objects as go
 import plotly.express as px
 
-# Configuration de la page pour l'accessibilité
+# Configuration de la page pour l'ccessibilité
 st.set_page_config(
     page_title="Prédiction Consommation Électrique - Interface Accessible",
     page_icon="⚡",
@@ -123,7 +123,7 @@ def get_best_model_path_from_mlflow(
     Returns:
         Chemin vers le fichier du modèle
     """
-    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://37.59.218.166:5000")
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
     mlflow.set_tracking_uri(tracking_uri)
     client = MlflowClient()
 
